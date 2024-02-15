@@ -72,7 +72,7 @@ class DownloadItem(Gtk.Box):
         self.append(vbox)
 
         # Thumbnail (read temporary image file)
-        self.thumbnail = Gtk.Picture.new_for_filename(str(Path(__file__).parent.joinpath("pygyt_wink.png")))
+        self.thumbnail = Gtk.Picture.new_for_filename(str(Path(__file__).parent.joinpath("assets/pygyt_wink.png")))
         self.thumbnail.set_keep_aspect_ratio(True)
         self.append(self.thumbnail)
 

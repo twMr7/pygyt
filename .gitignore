@@ -1,3 +1,6 @@
+# expect yt_dlp a symbolic link
+yt_dlp
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

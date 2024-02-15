@@ -94,7 +94,7 @@ class Pygyt(Gtk.Application):
         about_dialog.set_version("0.1")
         about_dialog.set_authors(["James Chang <twmr7@outlook.com>"])
         about_dialog.set_comments("python gtk frontend of yt-dlp")
-        logo_image = Gtk.Image.new_from_file(str(Path(__file__).parent.joinpath("pygyt_gleaner.png")))
+        logo_image = Gtk.Image.new_from_file(str(Path(__file__).parent.joinpath("assets/pygyt_gleaner.png")))
         about_dialog.set_logo(logo_image.get_paintable())
         about_dialog.present()
 
