@@ -15,6 +15,8 @@ class DownloadItem(Gtk.Box):
 
     def __init__(self, config: dict, url: str, **kwargs):
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL, **kwargs)
+        # every new item receives a copy of the system-wise default configuration,
+        # but later turns into an item specific configuration when metadata is retrieved.
         self.config = copy.deepcopy(config)
         self.set_spacing(12)
 
@@ -122,7 +124,7 @@ class DownloadItem(Gtk.Box):
         # return True for periodically get called
         return True
 
-    def on_get_meta_task_done(self, meta: dict, strerr: str):
+    def on_get_meta_task_done(self, meta: dict, file_name:str, strerr: str):
         # stop the activity timer
         if self.timer_pulse:
             GLib.source_remove(self.timer_pulse)
@@ -139,8 +141,13 @@ class DownloadItem(Gtk.Box):
             return
 
         self.meta = meta
-        self.title.set_text(meta["title"])
-        self.download_home = f"{self.config['download-folder']}/{meta['title']}"
+        self.title.set_text(file_name)
+
+        # update configuration for later task to download file
+        self.config["file_name"] = file_name
+        self.config["download-folder"] += f"/{file_name}"
+        # info jaon file should also be available by design
+        self.config["info_json"] = f"{self.config['download-folder']}/{file_name}.json"
 
         formats = meta.get("formats")
 
@@ -165,16 +172,11 @@ class DownloadItem(Gtk.Box):
         # stop the progress
         self.title.set_progress_fraction(0.0)
         # update the image
-        self.thumbnail.set_filename(f"{self.download_home}/{meta['title']}.png")
-        # item is ready for download
-        self.emit("meta_ready", self.title.props.text)
-
-        # update configuration for task to download file
-        self.config["download-folder"] += f"/{meta['title']}"
-        # info jaon file should also be available by design
-        self.config["info_json"] = self.config["download-folder"] + f"/{meta['title']}.json"
+        self.thumbnail.set_filename(f"{self.config['download-folder']}/{file_name}.png")
         # update tooltip
         self.set_tooltip_text(f"Ready to download: {self.config['download-folder']}")
+        # item is ready for download
+        self.emit("meta_ready", self.title.props.text)
 
     def get_file(self):
         """
@@ -234,7 +236,7 @@ class DownloadItem(Gtk.Box):
         callback when downloading task ended
         """
         if 0 == retcode:
-            self.set_tooltip_text(f"File downloaded in: {self.config['download-folder']}")
+            self.set_tooltip_text(f"File 100% downloaded in: {self.config['download-folder']}")
         else:
             self.set_tooltip_text(f"Failed to download ({retcode}): {strerr}")
             # TODO: also change the thumbnail to indicate error status

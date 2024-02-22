@@ -48,7 +48,7 @@ class TaskGetMeta(threading.Thread):
     A threading task for extracting info
     """
     def __init__(self, config: dict, url: str,
-                 on_done_callback: Callable[[dict, str], bool]):
+                 on_done_callback: Callable[[dict, str, str], bool]):
         super().__init__()
         self.config = config
         # the target URL
@@ -60,10 +60,12 @@ class TaskGetMeta(threading.Thread):
             self.opts = ytdl_parse_options(config["additional-options"])
         else:
             self.opts = dict()
-        # temporary unique ID name
+        # temporary unique ID as the name before the title is known
         self.idname = f"pygyt_{time.monotonic_ns():x}" 
         # config download home
         self.opts["paths"] = {"home": f"{config['download-folder']}/{self.idname}"}
+        # save with an unique name instead of "%(title)s.%(ext)s"
+        self.opts["outtmpl"] = {"thumbnail": f"{self.idname}.%(ext)s"}
         # channel playlist not supported
         self.opts["noplaylist"] = True
         # no yt-dlp built-in progress
@@ -74,8 +76,6 @@ class TaskGetMeta(threading.Thread):
         self.opts["skip_download"] = True
         # options to download the thumbnail
         self.opts["writethumbnail"] = True
-        # save with an unique name instead of "%(title)s.%(ext)s"
-        self.opts["outtmpl"] = {"thumbnail": f"{self.idname}.%(ext)s"}
         # png format is all we need
         self.opts["postprocessors"] = [{
             "format": "png",
@@ -93,21 +93,23 @@ class TaskGetMeta(threading.Thread):
             except Exception as err:
                 GLib.idle_add(self.on_done_cb, None, str(err))
             else:
-                json_file = f"{self.opts['paths']['home']}/{meta['title']}.json"
+                # gets title from meta and derives a safe file base name
+                file_name = yt_dlp.utils.sanitize_filename(meta['title']).strip(" .")
+                json_file = f"{self.opts['paths']['home']}/{file_name}.json"
                 # dump meta to info json file
                 with open(json_file, "w") as f:
                     json.dump(meta, f)
                 try:
                     # title is available now, rename the home folder name
                     new_home = Path(self.opts["paths"]["home"]).rename(
-                        f"{self.config['download-folder']}/{meta['title']}")
+                        f"{self.config['download-folder']}/{file_name}")
                     thumbnail_path = new_home.joinpath(f"{self.idname}.png")
                     if (thumbnail_path.exists()):
-                        thumbnail_path.rename(new_home.joinpath(f"{meta['title']}.png"))
+                        thumbnail_path.rename(new_home.joinpath(f"{file_name}.png"))
                 except OSError as oserr:
-                    GLib.idle_add(self.on_done_cb, None, str(oserr))
+                    GLib.idle_add(self.on_done_cb, None, None, str(oserr))
                 else:
-                    GLib.idle_add(self.on_done_cb, meta, "")
+                    GLib.idle_add(self.on_done_cb, meta, file_name, "")
 
 
 class TaskGetFile(threading.Thread):
@@ -132,6 +134,7 @@ class TaskGetFile(threading.Thread):
             self.opts = dict()
         # config download home
         self.opts["paths"] = {"home": config['download-folder']}
+        self.opts["outtmpl"] = {"default": f"{self.config['file_name']}.%(ext)s"}
         # channel playlist not supported
         self.opts["noplaylist"] = True
         # no yt-dlp built-in progress
