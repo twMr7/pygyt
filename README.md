@@ -25,6 +25,29 @@ pygyt
 └── ytdlp_tasks.py
 ```
 
+## Starting Pygyt
+
+```shell
+$ python3 pygyt.py
+```
+
+### Options
+
+```
+$ python3 pygyt.py -h
+Usage:
+  pygyt.py [OPTION…]
+
+Help Options:
+  -h, --help                                   Show help options
+  --help-all                                   Show all help options
+  --help-gapplication                          Show GApplication options
+
+Application Options:
+  -d, --download-folder                        The folder to store download files. (default: '~/Downloads')
+  -a, --additional-options='OPTION ARG(s)'     Append additional options for yt-dlp, multiple uses of '-a' are allowed.
+```
+
 ## Screenshots
 
 ![pygyt_on_ubuntu](/assets/screenshot_ubuntu.png)

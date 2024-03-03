@@ -55,10 +55,14 @@ class PygytWin(Gtk.ApplicationWindow):
         self.download_list.set_selection_mode(Gtk.SelectionMode.MULTIPLE)
         self.download_list.set_show_separators(True)
         self.download_list.set_hexpand(True)
+        self.download_list.set_vexpand(True)
+        list_win = Gtk.ScrolledWindow()
+        list_win.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        list_win.set_child(self.download_list)
 
         vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         vbox.append(self.action_bar)
-        vbox.append(self.download_list)
+        vbox.append(list_win)
 
         self.set_child(vbox)
 
